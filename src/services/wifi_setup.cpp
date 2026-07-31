@@ -83,6 +83,14 @@ WiFiManagerParameter s_param_miles("use_miles", "Display distances in miles", "T
 char s_runways_checkbox_attrs[32] = "type=\"checkbox\"";
 WiFiManagerParameter s_param_runways("show_runways", "Show airport runways", "T", 2,
                                      s_runways_checkbox_attrs, WFM_LABEL_AFTER);
+// constexpr int kRangeParamLen = 1;
+// constexpr char kRangeInputAttrs[] =
+//     " type=\"number\" step=\"1\"";
+
+WiFiManagerParameter s_param_range("range_index", "Hidden", "", 2);
+
+char s_range_html[1000];
+WiFiManagerParameter s_param_range_ddl(s_range_html);
 
 void refreshPortalParamDefaults() {
   char lat_buf[kCoordParamLen + 1];
@@ -97,6 +105,7 @@ void refreshPortalParamDefaults() {
   snprintf(s_runways_checkbox_attrs, sizeof(s_runways_checkbox_attrs),
            "type=\"checkbox\"%s", ui::radar::showRunways() ? " checked" : "");
   s_param_runways.setValue("T", 2);
+  ui::radar::getRangeHtml("range_index", s_range_html, sizeof(s_range_html));
 }
 
 void onPortalParamsSaved() {
@@ -106,6 +115,8 @@ void onPortalParamsSaved() {
   }
   ui::radar::saveMilesFromPortal(s_param_miles.getValue());
   ui::radar::saveRunwaysFromPortal(s_param_runways.getValue());
+  ui::radar::saveRangeFromPortal(s_param_range.getValue());
+  refreshPortalParamDefaults();
 }
 
 void attachPortalParams(WiFiManager& wm) {
@@ -114,6 +125,9 @@ void attachPortalParams(WiFiManager& wm) {
   wm.addParameter(&s_param_lon);
   wm.addParameter(&s_param_miles);
   wm.addParameter(&s_param_runways);
+  wm.addParameter(&s_param_range);
+  wm.addParameter(&s_param_range_ddl);
+
   wm.setSaveParamsCallback(onPortalParamsSaved);
 }
 

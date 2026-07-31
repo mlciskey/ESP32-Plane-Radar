@@ -24,11 +24,23 @@ struct RangePreset {
 
 constexpr float kRing3ToOuterKm = 4.0f / 3.0f;
 
-constexpr RangePreset kRangePresets[] = {
+constexpr RangePreset kRangePresetsOld[] = {
     {5.0f, 5.0f * kRing3ToOuterKm},
     {10.0f, 10.0f * kRing3ToOuterKm},
     {15.0f, 15.0f * kRing3ToOuterKm},
     {25.0f, 25.0f * kRing3ToOuterKm},
+};
+
+constexpr RangePreset kRangePresets[] = {
+    {1.61f, 1.61f * kRing3ToOuterKm},
+    {1.61f * 2.5, 1.61f * kRing3ToOuterKm * 2.5},
+    {1.61f * 5, 1.61f * kRing3ToOuterKm * 5},
+    {1.61f * 10, 1.61f * kRing3ToOuterKm * 10},
+    {1.61f * 15, 1.61f * kRing3ToOuterKm * 15},
+    {1.61f * 20, 1.61f * kRing3ToOuterKm * 20},
+    {1.61f * 25, 1.61f * kRing3ToOuterKm * 25},
+    {1.61f * 30, 1.61f * kRing3ToOuterKm * 30},
+    {1.61f * 50, 1.61f * kRing3ToOuterKm * 50},
 };
 
 constexpr size_t kRangePresetCount =
@@ -48,6 +60,9 @@ bool showRunways();
 /** WiFi portal checkbox: "T" = miles, otherwise km. */
 void saveMilesFromPortal(const char* checkbox_value);
 void saveRunwaysFromPortal(const char* checkbox_value);
+void saveRangeFromPortal(const char* index_value);
+void getRangeIndexes(char* buff, size_t len);
+void getRangeHtml(const char* id, char* buff, size_t len);
 void formatRing3Label(char* buf, size_t len, float ring3_km, bool use_miles);
 void formatCurrentRing3Label(char* buf, size_t len);
 /** Reset distance units to km (e.g. with WiFi credential wipe). */
