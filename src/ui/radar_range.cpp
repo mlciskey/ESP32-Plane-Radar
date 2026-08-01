@@ -165,10 +165,14 @@ void getRangeHtml(const char* id, char* buff, size_t len) {
     char selected[20] = "\0";
     char optionStr[100] = "\0";
     float ring3_km = kRangePresets[indx].ring3_km;
-    const int km = static_cast<int>(lroundf(ring3_km));
-    sprintf(kmStr, "%d km", km);
-    const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMile));
-    sprintf(miStr, "%d mi", mi);
+    sprintf(kmStr, "%.1f", ring3_km);
+    char* p = strstr(kmStr, ".0");
+    if (p) *p = 0x0;
+    sprintf(kmStr, "%s km", kmStr);
+    sprintf(miStr, "%.1f", ring3_km / kKmPerMile);
+    p = strstr(miStr, ".0");
+    if (p) *p = 0x0;
+    sprintf(miStr, "%s mi", miStr);
     char* first = kmStr;
     char* second = miStr;
     if (s_use_miles) {
@@ -193,11 +197,19 @@ void getRangeHtml(const char* id, char* buff, size_t len) {
 
 void formatRing3Label(char* buf, size_t len, float ring3_km, bool use_miles) {
   if (use_miles) {
-    const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMile));
-    snprintf(buf, len, "%dmi", mi);
+    // const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMile));
+    // snprintf(buf, len, "%dmi", mi);
+    sprintf(buf, "%.1f", ring3_km / kKmPerMile);
+    char* p = strstr(buf, ".0");
+    if (p) *p = 0x0;
+    sprintf(buf, "%s mi", buf);
   } else {
-    const int km = static_cast<int>(lroundf(ring3_km));
-    snprintf(buf, len, "%dkm", km);
+    // const int km = static_cast<int>(lroundf(ring3_km));
+    // snprintf(buf, len, "%dkm", km);
+    sprintf(buf, "%.1f", ring3_km);
+    char* p = strstr(buf, ".0");
+    if (p) *p = 0x0;
+    sprintf(buf, "%s km", buf);
   }
 }
 
