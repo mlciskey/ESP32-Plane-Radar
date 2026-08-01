@@ -241,3 +241,16 @@ void statusScreenWifiReset() {
   drawTextBlock(config::kColorYellow, config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));
 }
+
+void statusScreenWifiConnected(const char* ipAddr) {
+  char ipLine[100];
+  sprintf(ipLine, "IP: %s", ipAddr);
+
+  const TextLine lines[] = {
+      {"Wi-Fi Connected", 1.15f, &kPortalGfxTitle},
+      {"", 1.05f, &kPortalGfxBody},
+      {ipLine, 1.0f, &kPortalGfxBody},
+  };
+  drawTextBlock(config::kColorBlack, config::kTextOnBlack, lines,
+                sizeof(lines) / sizeof(lines[0]));
+}

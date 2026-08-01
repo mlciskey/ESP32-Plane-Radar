@@ -256,9 +256,11 @@ void startLanWebPortal() {
     MDNS.addService("http", "tcp", 80);
   }
 #endif
-  s_wm.startWebPortal();
   Serial.printf("LAN config: http://%s.local or http://%s\n",
                 config::kPortalHostname, WiFi.localIP().toString().c_str());
+  statusScreenWifiConnected(WiFi.localIP().toString().c_str());
+  delay(5000);
+  s_wm.startWebPortal();
 }
 
 void stopLanWebPortal() {
