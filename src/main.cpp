@@ -63,12 +63,17 @@ void handleBootButton() {
 
 void fetchAndDrawAircraft() {
   const float fetch_km = ui::radar::fetchRadiusKm();
-  if (!services::adsb::fetchUpdate(services::location::lat(),
-                                   services::location::lon(), fetch_km)) {
-    handleBootButton();
-    return;
+  try {
+    if (!services::adsb::fetchUpdate(services::location::lat(),
+                                    services::location::lon(), fetch_km)) {
+      handleBootButton();
+      return;
+    }
+    ui::radarDisplayRefreshAircraft();
   }
-  ui::radarDisplayRefreshAircraft();
+  catch (const std::exception& e) {
+    Serial.printf("ADSB fetch failed: %s\n", e.what());
+  }
   handleBootButton();
 }
 

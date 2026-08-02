@@ -236,6 +236,7 @@ bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
   if (!readResponseBodyWithPoll(http, payload)) {
     Serial.println("adsb: empty response");
     http.end();
+    payload = "";
     return false;
   }
   http.end();
@@ -244,8 +245,10 @@ bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
   const DeserializationError err = deserializeJson(doc, payload);
   if (err) {
     Serial.printf("adsb: JSON parse error: %s\n", err.c_str());
+    payload = "";
     return false;
   }
+  payload = "";
 
   JsonArray ac = doc["ac"].as<JsonArray>();
   if (ac.isNull()) {
