@@ -33,7 +33,10 @@ constexpr RangePreset kRangePresetsOld[] = {
 
 constexpr RangePreset kRangePresets[] = {
     {1.61f, 1.61f * kRing3ToOuterKm},
+    {1.61f * 2, 1.61f * kRing3ToOuterKm * 2},
     {1.61f * 2.5, 1.61f * kRing3ToOuterKm * 2.5},
+    {1.61f * 3, 1.61f * kRing3ToOuterKm * 3},
+    {1.61f * 4, 1.61f * kRing3ToOuterKm * 4},
     {1.61f * 5, 1.61f * kRing3ToOuterKm * 5},
     {1.61f * 10, 1.61f * kRing3ToOuterKm * 10},
     {1.61f * 15, 1.61f * kRing3ToOuterKm * 15},
@@ -41,6 +44,7 @@ constexpr RangePreset kRangePresets[] = {
     {1.61f * 25, 1.61f * kRing3ToOuterKm * 25},
     {1.61f * 30, 1.61f * kRing3ToOuterKm * 30},
     {1.61f * 50, 1.61f * kRing3ToOuterKm * 50},
+    {1.61f * 100, 1.61f * kRing3ToOuterKm * 100},
 };
 
 constexpr size_t kRangePresetCount =

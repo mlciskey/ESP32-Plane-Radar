@@ -21,10 +21,17 @@ unsigned long g_wifi_down_since = 0;
 unsigned long g_last_reconnect_ms = 0;
 unsigned long g_last_adsb_fetch_ms = 0;
 
+bool first = true;
+
 void showRadarIfConnected() {
   if (WiFi.status() != WL_CONNECTED) {
     g_radar_visible = false;
     return;
+  }
+  if (first) {
+    statusScreenWifiConnected(WiFi.localIP().toString().c_str());
+    delay(2500);
+    first = false;
   }
   ui::radarDisplayDraw();
   g_radar_visible = true;
@@ -38,6 +45,11 @@ void onRangeTap() {
                 ui::radar::rangeCurrent().outer_km);
 
   if (g_radar_visible && WiFi.status() == WL_CONNECTED) {
+    if (first) {
+      statusScreenWifiConnected(WiFi.localIP().toString().c_str());
+      delay(2500);
+      first = false;
+    }
     ui::radarDisplayDraw();
   }
 }

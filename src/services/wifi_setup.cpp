@@ -14,8 +14,10 @@
 #endif
 
 #include "config.h"
+#include "data/large_airports.h"
 #include "services/radar_location.h"
 #include "ui/radar_range.h"
+#include "ui/runway_overlay.h"
 #include "ui/status_screens.h"
 
 portMUX_TYPE s_boot_mux = portMUX_INITIALIZER_UNLOCKED;
@@ -69,7 +71,7 @@ bool wifiLinkUp();
 
 constexpr int kCoordParamLen = 20;
 constexpr char kCoordInputAttrs[] =
-    " type=\"number\" step=\"0.000001\"";
+    " type=\"number\" step=\"0.0000001\"";
 
 WiFiManagerParameter s_param_lat("radar_lat", "Latitude (deg)", "0",
                                 kCoordParamLen, kCoordInputAttrs);
@@ -83,11 +85,10 @@ WiFiManagerParameter s_param_miles("use_miles", "Display distances in miles", "T
 char s_runways_checkbox_attrs[32] = "type=\"checkbox\"";
 WiFiManagerParameter s_param_runways("show_runways", "Show airport runways", "T", 2,
                                      s_runways_checkbox_attrs, WFM_LABEL_AFTER);
-// constexpr int kRangeParamLen = 1;
-// constexpr char kRangeInputAttrs[] =
-//     " type=\"number\" step=\"1\"";
-
 WiFiManagerParameter s_param_range("range_index", "Hidden", "", 2);
+
+char s_airport_html[1000];
+WiFiManagerParameter s_param_airport_ddl(s_airport_html);
 
 char s_range_html[1000];
 WiFiManagerParameter s_param_range_ddl(s_range_html);
@@ -95,8 +96,8 @@ WiFiManagerParameter s_param_range_ddl(s_range_html);
 void refreshPortalParamDefaults() {
   char lat_buf[kCoordParamLen + 1];
   char lon_buf[kCoordParamLen + 1];
-  snprintf(lat_buf, sizeof(lat_buf), "%.6f", services::location::lat());
-  snprintf(lon_buf, sizeof(lon_buf), "%.6f", services::location::lon());
+  snprintf(lat_buf, sizeof(lat_buf), "%.7f", services::location::lat());
+  snprintf(lon_buf, sizeof(lon_buf), "%.7f", services::location::lon());
   s_param_lat.setValue(lat_buf, kCoordParamLen);
   s_param_lon.setValue(lon_buf, kCoordParamLen);
   snprintf(s_miles_checkbox_attrs, sizeof(s_miles_checkbox_attrs), "type=\"checkbox\"%s",
@@ -106,6 +107,9 @@ void refreshPortalParamDefaults() {
            "type=\"checkbox\"%s", ui::radar::showRunways() ? " checked" : "");
   s_param_runways.setValue("T", 2);
   ui::radar::getRangeHtml("range_index", s_range_html, sizeof(s_range_html));
+  Serial.printf("range html size: %d\n", strlen(s_range_html));
+  ui::runway::getAirportHtml("s_param_range", s_airport_html, sizeof(s_airport_html));
+  Serial.printf("airport html size: %d\n", strlen(s_airport_html));
 }
 
 void onPortalParamsSaved() {
@@ -123,6 +127,7 @@ void attachPortalParams(WiFiManager& wm) {
   refreshPortalParamDefaults();
   wm.addParameter(&s_param_lat);
   wm.addParameter(&s_param_lon);
+  wm.addParameter(&s_param_airport_ddl);
   wm.addParameter(&s_param_miles);
   wm.addParameter(&s_param_runways);
   wm.addParameter(&s_param_range);
@@ -258,8 +263,6 @@ void startLanWebPortal() {
 #endif
   Serial.printf("LAN config: http://%s.local or http://%s\n",
                 config::kPortalHostname, WiFi.localIP().toString().c_str());
-  statusScreenWifiConnected(WiFi.localIP().toString().c_str());
-  delay(5000);
   s_wm.startWebPortal();
 }
 

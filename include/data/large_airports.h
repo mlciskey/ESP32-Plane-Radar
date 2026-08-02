@@ -7,7 +7,7 @@
 namespace data::large_airports {
 
 struct Airport {
-  char ident[5];
+  char ident[7];
   int32_t lat_e7;
   int32_t lon_e7;
 };
@@ -21,8 +21,8 @@ struct Runway {
   uint16_t length_m;
 };
 
-constexpr size_t kAirportCount = 1166;
-constexpr size_t kRunwayCount = 1706;
+constexpr size_t kAirportCount = 1206;
+constexpr size_t kRunwayCount = 1715;
 
 extern const Airport kAirports[];
 extern const Runway kRunways[];

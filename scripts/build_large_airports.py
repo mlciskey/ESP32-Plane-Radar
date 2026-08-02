@@ -66,8 +66,30 @@ def build_dataset() -> tuple[
     runways = fetch_csv(RUNWAYS_URL)
 
     large_idents: dict[str, tuple[int, int]] = {}
+    large_idents["Amelia"] = (297479159,-954477098)
+    large_idents["Dan"] = (418278164,-876500672)
+    large_idents["Mark"] = (387906714,-908365566)
     for a in airports:
-        if a.get("type") != "large_airport":
+        ok = 0
+        # if a.get("iso_country") != "US":
+        #     continue
+        if a.get("type") == "large_airport":
+            ok = 1
+        # if a.get("iso_region") == "US-TX" or a.get("iso_region") == "US-IL" or a.get("iso_region") == "US-MO":
+        #     if a.get("type") == "medium_airport":   
+        #         ok = 1
+        #     if a.get("type") == "small_airport":   
+        #         ok = 1
+        #     #if a.get("type") == "heliport":   
+        #         #ok = 1
+        if a.get("ident") == "KSUS":
+            ok = 1
+        if a.get("ident") == "KOSH":
+            ok = 1
+        if a.get("iso_region") == "US-TX" or a.get("iso_region") == "US-IL" or a.get("iso_region") == "US-MO" or a.get("iso_region") == "US-WA" or a.get("iso_region") == "US-AK":
+            if (a.get("type") == "seaplane_base"):
+                ok = 1
+        if (ok == 0):
             continue
         ident = (a.get("ident") or "").strip()
         if len(ident) != 4:
@@ -132,7 +154,7 @@ def render_header(airport_count: int, segment_count: int) -> str:
             "namespace data::large_airports {",
             "",
             "struct Airport {",
-            "  char ident[5];",
+            "  char ident[7];",
             "  int32_t lat_e7;",
             "  int32_t lon_e7;",
             "};",

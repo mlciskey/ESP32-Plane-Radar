@@ -14,7 +14,6 @@
 //namespace fonts = lgfx::v1::fonts;
 
 namespace ui::runway {
-namespace {
 
 constexpr float kKmPerDeg = 111.0f;
 constexpr size_t kMaxAirportLabels = 32;
@@ -243,8 +242,6 @@ void drawAirportLabel(lgfx::LGFXBase& gfx,
   drawBoldRunwayLabel(gfx, ap.ident, lx, ly);
 }
 
-}  // namespace
-
 void drawLargeAirportRunways(lgfx::LGFXBase& gfx) {
   if (!radar::showRunways()) {
     return;
@@ -276,11 +273,28 @@ void drawLargeAirportRunways(lgfx::LGFXBase& gfx) {
       continue;
     }
     if (!drawRunwayLine(gfx, rw)) {
-      continue;
+       continue;
     }
     if (!s_label_pending[ap_idx] && label_count < kMaxAirportLabels) {
       s_label_pending[ap_idx] = true;
       label_airports[label_count++] = ap_idx;
+    }
+  }
+
+  for (size_t i = 0; i < data::large_airports::kAirportCount; ++i) {
+    const auto& ap = data::large_airports::kAirports[i];
+    float dx_km = 0.0f;
+    float dy_km = 0.0f;
+    float dist_km = 0.0f;
+    offsetKmFromCenter(e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), &dx_km, &dy_km,
+                        &dist_km);
+    s_in_range[i] = (dist_km <= radius_km);
+    if (!s_in_range[i]) {
+      continue;
+    }
+    if (!s_label_pending[i] && label_count < kMaxAirportLabels) {
+      s_label_pending[i] = true;
+      label_airports[label_count++] = i;
     }
   }
 
@@ -293,6 +307,110 @@ void drawLargeAirportRunways(lgfx::LGFXBase& gfx) {
   for (size_t i = 0; i < label_count; ++i) {
     drawAirportLabel(gfx, data::large_airports::kAirports[label_airports[i]]);
   }
+}
+
+void getAirportHtml(const char* id, char* buff, size_t len) {
+  uint16_t label_airports[kMaxAirportLabels];
+  size_t label_count = 0;
+  char line[200];
+  float radius_km = radar::fetchRadiusKm();
+  if (radius_km < 25)
+    radius_km = 25;
+
+  snprintf(buff, len, "");
+  sprintf(line, "<br/><label for='%s_ddl'>Locations</label>\n", id);
+  buff = strcat(buff, line);
+//  sprintf(line, "<select id='%s_ddl' name='%s_ddl' onchange=\"document.getElementById('%s').value = this.value\">\n", id, id, id);
+  sprintf(line, "<select id='%s_ddl' name='%s_ddl' onchange='setLatLon(this.value)'>\n", id, id, id);
+  buff = strcat(buff, line);
+  sprintf(line, "<option value=''>Select a location</option>\n", id);
+  buff = strcat(buff, line);
+
+  char ident[20];
+  char optionStr[100];
+  char selected[20];
+  char lat1[20];
+  char lon1[20];
+  char lat2[20];
+  char lon2[20];
+
+  for (int indx = 0; indx < data::large_airports::kAirportCount; indx++) {
+    const auto& ap = data::large_airports::kAirports[indx];
+
+    sprintf(ident, "%s", ap.ident);
+    if (strcmp(ap.ident, strupr(ident)) == 0)
+      continue;
+    selected[0] = '\0';
+    // if (e7ToDeg(ap.lat_e7) == services::location::lat() && e7ToDeg(ap.lon_e7) == ) {
+    //   sprintf(selected, " selected");
+    // }
+    sprintf(lat1, "%.7f", e7ToDeg(ap.lat_e7));
+    sprintf(lon1, "%.7f", e7ToDeg(ap.lon_e7));
+    sprintf(lat2, "%.7f", services::location::lat());
+    sprintf(lon2, "%.7f", services::location::lon());
+    if (strcmp(lat1, lat2) == 0 && strcmp(lon1, lon2) == 0) {
+      sprintf(selected, " selected");
+    }
+    Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lon1, lat2, lon2);
+    sprintf(optionStr, "<option value='%.7f,%.7f'%s>%s</option>\n", e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), selected, ap.ident);
+    buff = strcat(buff, optionStr);
+    if (strlen(buff) > len - 100)
+    break;
+    if (label_count < kMaxAirportLabels) {
+      label_airports[label_count++] = indx;
+    }
+  }
+  for (int indx = 0; indx < data::large_airports::kAirportCount; indx++) {
+    const auto& ap = data::large_airports::kAirports[indx];
+
+    sprintf(ident, "%s", ap.ident);
+    if (strcmp(ap.ident, strupr(ident)) != 0)
+      continue;
+    bool found = false;
+    for (size_t i = 0; i < data::large_airports::kRunwayCount; ++i) {
+      const auto& rw = data::large_airports::kRunways[i];
+      if (rw.airport_idx == indx) {
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      continue;
+    found = false;
+    float dx_km = 0.0f;
+    float dy_km = 0.0f;
+    float dist_km = 0.0f;
+    offsetKmFromCenter(e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), &dx_km, &dy_km,
+                        &dist_km);
+    if (dist_km < 200.9)
+      found = true;
+    if (!found)
+      continue;
+    selected[0] = '\0';
+    sprintf(lat1, "%.7f", e7ToDeg(ap.lat_e7));
+    sprintf(lon1, "%.7f", e7ToDeg(ap.lon_e7));
+    sprintf(lat2, "%.7f", services::location::lat());
+    sprintf(lon2, "%.7f", services::location::lon());
+    if (strcmp(lat1, lat2) == 0 && strcmp(lon1, lon2) == 0) {
+      sprintf(selected, " selected");
+    }
+    Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lat2, lon1, lon2);
+    sprintf(optionStr, "<option value='%.7f,%.7f'%s>%s</option>\n", e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), selected, ap.ident);
+    buff = strcat(buff, optionStr);
+    if (strlen(buff) > len - 100)
+      break;
+  }
+  buff = strcat(buff, "</select>\n");
+  buff = strcat(buff, "<script>\n");
+  buff = strcat(buff, "function setLatLon(val) {\n");
+  buff = strcat(buff, "  if (val == '')\n");
+  buff = strcat(buff, "    return false;\n");
+  buff = strcat(buff, "  parts = val.split(/[,;|]/);\n");
+  buff = strcat(buff, "  document.getElementById('radar_lat').value = parts[0];\n");
+  buff = strcat(buff, "  document.getElementById('radar_lon').value = parts[1];\n");
+  buff = strcat(buff, "  return false;\n");
+  buff = strcat(buff, "}\n");
+  buff = strcat(buff, "</script>\n");
 }
 
 }  // namespace ui::runway
