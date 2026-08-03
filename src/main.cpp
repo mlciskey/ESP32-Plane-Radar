@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+#include "main.h"
 #include "config.h"
 #include "hardware/display.h"
 #include "services/adsb_client.h"
@@ -14,14 +15,16 @@
 #include "ui/radar_range.h"
 #include "ui/status_screens.h"
 
-namespace {
-
 bool g_radar_visible = false;
 unsigned long g_wifi_down_since = 0;
 unsigned long g_last_reconnect_ms = 0;
 unsigned long g_last_adsb_fetch_ms = 0;
 
 bool first = true;
+
+void resetRadarPolling() {
+  g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately after WiFi connects
+}
 
 void showRadarIfConnected() {
   if (WiFi.status() != WL_CONNECTED) {
@@ -33,7 +36,7 @@ void showRadarIfConnected() {
     delay(2500);
     first = false;
   }
-  g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately after WiFi connects
+  resetRadarPolling();
   ui::radarDisplayDraw();
   g_radar_visible = true;
 }
@@ -78,8 +81,6 @@ void fetchAndDrawAircraft() {
   }
   handleBootButton();
 }
-
-}  // namespace
 
 void setup() {
   Serial.begin(115200);
@@ -130,10 +131,9 @@ void loop() {
       showRadarIfConnected();
     } else if (millis() - g_last_adsb_fetch_ms >= config::kAdsbFetchIntervalMs) {
       Serial.printf("poll %ul\n", millis() - g_last_adsb_fetch_ms);
-      g_last_adsb_fetch_ms = millis();
       fetchAndDrawAircraft();
+      g_last_adsb_fetch_ms = millis();
     }
   }
-
   delay(10);
 }

@@ -13,7 +13,7 @@ namespace services::adsb {
 
 namespace {
 
-constexpr char kApiBase[] = "https://opendata.adsb.fi/api/v3/lat/";
+constexpr char kApiBase[] = "https://opendata.adsb.fi/api/v3/lat/%.7f/lon/%.7f/dist/%.1f";
 constexpr float kKmPerNm = 1.852f;
 constexpr int kConnectAttemptMs = 200;
 constexpr unsigned long kRequestTimeoutMs = 1000 * 10;
@@ -216,14 +216,17 @@ const Aircraft* aircraftList() { return s_aircraft; }
 bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
   const float dist_nm = kmToNauticalMiles(fetch_radius_km);
 
-  String url = kApiBase;
-  url += String(center_lat, 6);
-  url += "/lon/";
-  url += String(center_lon, 6);
-  url += "/dist/";
-  url += String(dist_nm, 1);
+  // String url = kApiBase;
+  // url += String(center_lat, 6);
+  // url += "/lon/";
+  // url += String(center_lon, 6);
+  // url += "/dist/";
+  // url += String(dist_nm, 1);
 
-  Serial.printf("adsb: fetchUpdate url=%s\n", url.c_str());
+  char url[256];
+  snprintf(url, sizeof(url), kApiBase, center_lat, center_lon, dist_nm);
+
+  Serial.printf("adsb: fetchUpdate url=%s\n", url);
 
   WiFiClientSecure client;
   client.setInsecure();

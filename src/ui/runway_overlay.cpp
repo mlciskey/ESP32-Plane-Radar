@@ -351,7 +351,7 @@ void getAirportHtml(const char* id, char* buff, size_t len) {
     if (strcmp(lat1, lat2) == 0 && strcmp(lon1, lon2) == 0) {
       sprintf(selected, " selected");
     }
-    Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lon1, lat2, lon2);
+    //Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lon1, lat2, lon2);
     sprintf(optionStr, "<option value='%.7f,%.7f'%s>%s</option>\n", e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), selected, ap.ident);
     buff = strcat(buff, optionStr);
     if (strlen(buff) > len - 100)
@@ -394,7 +394,7 @@ void getAirportHtml(const char* id, char* buff, size_t len) {
     if (strcmp(lat1, lat2) == 0 && strcmp(lon1, lon2) == 0) {
       sprintf(selected, " selected");
     }
-    Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lat2, lon1, lon2);
+    //Serial.printf("%s -- %s: %s, %s, %s, %s\n", ap.ident, selected, lat1, lat2, lon1, lon2);
     sprintf(optionStr, "<option value='%.7f,%.7f'%s>%s</option>\n", e7ToDeg(ap.lat_e7), e7ToDeg(ap.lon_e7), selected, ap.ident);
     buff = strcat(buff, optionStr);
     if (strlen(buff) > len - 100)

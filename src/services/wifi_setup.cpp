@@ -13,6 +13,7 @@
 #include <ESPmDNS.h>
 #endif
 
+#include "main.h"
 #include "config.h"
 #include "data/large_airports.h"
 #include "services/radar_location.h"
@@ -121,6 +122,7 @@ void onPortalParamsSaved() {
   ui::radar::saveRunwaysFromPortal(s_param_runways.getValue());
   ui::radar::saveRangeFromPortal(s_param_range.getValue());
   refreshPortalParamDefaults();
+  resetRadarPolling();
 }
 
 void attachPortalParams(WiFiManager& wm) {
