@@ -270,11 +270,11 @@ bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
 
     Serial.println("adsb: empty response");
     http.end();
-    if (dist_nm < 5 * 1.150779) {
-      dist_nm -= 1 * 1.150779;
+    if (dist_nm <= 6 * kKmPerNm) {
+      dist_nm -= 1 * kKmPerNm;
     }
     else
-      dist_nm -= 5 * 1.150779;
+      dist_nm -= 5 * kKmPerNm;
     if (dist_nm <= 0) {
       Serial.println("adsb: fetchUpdate failed, no data");
       return false;
