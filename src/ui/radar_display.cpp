@@ -432,12 +432,10 @@ void drawAircraftTag(int x, int y, const services::adsb::Aircraft& plane) {
     if (plane.callsign[0] != '!') {
       s_draw->setTextColor(radar::kColorLabel, radar::kColorBackground);
       s_draw->drawString(plane.callsign, anchor_x, ly);
-      Serial.printf("drawAircraftTag: callsign=%s\n", plane.callsign);
     }
     else {
       s_draw->setTextColor(radar::kColorEmergencyLabel, radar::kColorBackground);
       s_draw->drawString(&(plane.callsign[1]), anchor_x, ly);
-      Serial.printf("drawAircraftTag: E callsign=%s\n", &(plane.callsign[1]));
     }
   }
   ly += line_h;

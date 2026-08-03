@@ -190,7 +190,6 @@ void fillTagFields(Aircraft* ac, const JsonObject& plane) {
       char tmp[sizeof(ac->callsign)];
       snprintf(tmp, sizeof(ac->callsign), "!%s", ac->callsign);  
       strncpy(ac->callsign, tmp, sizeof(ac->callsign));
-      Serial.printf("fillTagFields: emergency=%s, callsign=%s\n", s, ac->callsign);
     }
   }
 
