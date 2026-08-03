@@ -184,6 +184,16 @@ void fillTagFields(Aircraft* ac, const JsonObject& plane) {
     copyJsonStringTrimmed(plane, "hex", ac->callsign, sizeof(ac->callsign));
   }
 
+  if (plane["emergency"].is<const char*>()) {
+    const char* s = plane["emergency"].as<const char*>();
+    if (strcmp(s, "none") != 0) {
+      char tmp[sizeof(ac->callsign)];
+      snprintf(tmp, sizeof(ac->callsign), "!%s", ac->callsign);  
+      strncpy(ac->callsign, tmp, sizeof(ac->callsign));
+      Serial.printf("fillTagFields: emergency=%s, callsign=%s\n", s, ac->callsign);
+    }
+  }
+
   copyJsonStringTrimmed(plane, "t", ac->type, sizeof(ac->type));
   formatAltitudeTag(plane, ac->alt, sizeof(ac->alt));
 }

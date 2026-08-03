@@ -30,6 +30,7 @@ uint16_t kColorTagType = 0x5DFF;
 uint16_t kColorTagAltitude = 0xFFE0;
 uint16_t kColorRunway = 0x4D5F;
 uint16_t kColorRunwayLabel = 0x7DFF;
+uint16_t kColorEmergencyLabel = 0xF81F;
 
 }  // namespace radar
 
@@ -428,8 +429,16 @@ void drawAircraftTag(int x, int y, const services::adsb::Aircraft& plane) {
   ly = std::max(1, std::min(ly, radar::kSize - block_h - 1));
 
   if (plane.callsign[0] != '\0') {
-    s_draw->setTextColor(radar::kColorLabel, radar::kColorBackground);
-    s_draw->drawString(plane.callsign, anchor_x, ly);
+    if (plane.callsign[0] != '!') {
+      s_draw->setTextColor(radar::kColorLabel, radar::kColorBackground);
+      s_draw->drawString(plane.callsign, anchor_x, ly);
+      Serial.printf("drawAircraftTag: callsign=%s\n", plane.callsign);
+    }
+    else {
+      s_draw->setTextColor(radar::kColorEmergencyLabel, radar::kColorBackground);
+      s_draw->drawString(&(plane.callsign[1]), anchor_x, ly);
+      Serial.printf("drawAircraftTag: E callsign=%s\n", &(plane.callsign[1]));
+    }
   }
   ly += line_h;
 

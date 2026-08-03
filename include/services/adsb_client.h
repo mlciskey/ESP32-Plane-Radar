@@ -10,7 +10,7 @@ struct Aircraft {
   float nose_deg;
   float track_deg;
   float gs_knots;
-  char callsign[9];
+  char callsign[12];
   char type[5];
   char alt[12];
 };
