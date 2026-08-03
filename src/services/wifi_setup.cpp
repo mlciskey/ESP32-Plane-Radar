@@ -108,9 +108,9 @@ void refreshPortalParamDefaults() {
            "type=\"checkbox\"%s", ui::radar::showRunways() ? " checked" : "");
   s_param_runways.setValue("T", 2);
   ui::radar::getRangeHtml("range_index", s_range_html, sizeof(s_range_html));
-  Serial.printf("range html size: %d\n", strlen(s_range_html));
+  //Serial.printf("range html size: %d\n", strlen(s_range_html));
   ui::runway::getAirportHtml("s_param_range", s_airport_html, sizeof(s_airport_html));
-  Serial.printf("airport html size: %d\n", strlen(s_airport_html));
+  //Serial.printf("airport html size: %d\n", strlen(s_airport_html));
 }
 
 void onPortalParamsSaved() {

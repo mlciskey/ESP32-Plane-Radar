@@ -23,7 +23,7 @@ unsigned long g_last_adsb_fetch_ms = 0;
 bool first = true;
 
 void resetRadarPolling() {
-  g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately after WiFi connects
+  g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately
 }
 
 void showRadarIfConnected() {
@@ -130,7 +130,7 @@ void loop() {
     if (!g_radar_visible) {
       showRadarIfConnected();
     } else if (millis() - g_last_adsb_fetch_ms >= config::kAdsbFetchIntervalMs) {
-      Serial.printf("poll %ul\n", millis() - g_last_adsb_fetch_ms);
+      //Serial.printf("poll %lu\n", millis() - g_last_adsb_fetch_ms);
       fetchAndDrawAircraft();
       g_last_adsb_fetch_ms = millis();
     }
