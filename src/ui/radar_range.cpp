@@ -15,8 +15,7 @@ constexpr char kPrefsNamespace[] = "planeradar";
 constexpr char kPrefsRangeKey[] = "rangeIdx";
 constexpr char kPrefsMilesKey[] = "useMiles";
 constexpr char kPrefsRunwaysKey[] = "showRwys";
-constexpr uint8_t kDefaultRangeIndex = 1;  // 10 km ring
-constexpr float kKmPerMile = 1.609344f;
+constexpr uint8_t kDefaultRangeIndex = 0;  
 
 Preferences s_prefs;
 uint8_t s_range_index = kDefaultRangeIndex;
@@ -139,7 +138,7 @@ void getRangeIndexes(char* buff, size_t len) {
   for (int indx = 0; indx < kRangePresetCount; indx++) {
     float ring3_km = kRangePresets[indx].ring3_km;
     if (s_use_miles) {
-      const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMile));
+      const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMi));
       snprintf(labelstr, sizeof(labelstr), "%s%d: %dmi", delim, indx, mi);
     } else {
       const int km = static_cast<int>(lroundf(ring3_km));
@@ -169,7 +168,7 @@ void getRangeHtml(const char* id, char* buff, size_t len) {
     char* p = strstr(kmStr, ".0");
     if (p) *p = 0x0;
     sprintf(kmStr, "%s km", kmStr);
-    sprintf(miStr, "%.1f", ring3_km / kKmPerMile);
+    sprintf(miStr, "%.1f", ring3_km / kKmPerMi);
     p = strstr(miStr, ".0");
     if (p) *p = 0x0;
     sprintf(miStr, "%s mi", miStr);
@@ -197,9 +196,9 @@ void getRangeHtml(const char* id, char* buff, size_t len) {
 
 void formatRing3Label(char* buf, size_t len, float ring3_km, bool use_miles) {
   if (use_miles) {
-    // const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMile));
+    // const int mi = static_cast<int>(lroundf(ring3_km / kKmPerMi));
     // snprintf(buf, len, "%dmi", mi);
-    sprintf(buf, "%.1f", ring3_km / kKmPerMile);
+    sprintf(buf, "%.1f", ring3_km / kKmPerMi);
     char* p = strstr(buf, ".0");
     if (p) *p = 0x0;
     sprintf(buf, "%s mi", buf);

@@ -8,6 +8,7 @@
 #include <Preferences.h>
 #include <esp_system.h>
 #include <esp_wifi.h>
+#include "esp_bt.h"
 
 #ifdef WM_MDNS
 #include <ESPmDNS.h>
@@ -279,7 +280,10 @@ void stopLanWebPortal() {
 }
 
 void prepareSta() {
-  WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  esp_bt_controller_disable();
+  esp_wifi_set_max_tx_power(WIFI_POWER_8_5dBm);
+  //WiFi.setTxPower(WIFI_POWER_8_5dBm);
+  //Serial.printf("WiFi TX power: %d dBm\n", WiFi.getTxPower());
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(WIFI_PS_NONE);
   WiFi.setAutoReconnect(true);

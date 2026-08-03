@@ -11,12 +11,10 @@
 
 namespace services::adsb {
 
-namespace {
-
 constexpr char kApiBase[] = "https://opendata.adsb.fi/api/v3/lat/%.7f/lon/%.7f/dist/%.1f";
-constexpr float kKmPerNm = 1.852f;
 constexpr int kConnectAttemptMs = 200;
-constexpr unsigned long kRequestTimeoutMs = 1000 * 10;
+constexpr unsigned long kRequestTimeoutMs = 1000 * 5;
+constexpr float kKmPerNm = 1.852f;
 
 Aircraft s_aircraft[kMaxAircraft];
 size_t s_aircraft_count = 0;
@@ -46,7 +44,7 @@ int performGetWithPoll(HTTPClient& http) {
   return HTTPC_ERROR_READ_TIMEOUT;
 }
 
-bool readResponseBodyWithPoll(HTTPClient& http, String& payload) {
+bool readJsonResponse(HTTPClient& http, JsonDocument& doc) {
   WiFiClient* stream = http.getStreamPtr();
   if (stream == nullptr) {
     return false;
@@ -54,43 +52,28 @@ bool readResponseBodyWithPoll(HTTPClient& http, String& payload) {
 
   const int content_length = http.getSize();
   Serial.printf("adsb: content_length=%d\n", content_length);
-  if (content_length > 0) {
-    payload.reserve(static_cast<unsigned>(content_length + 1));
-  }
 
-  uint8_t buffer[512];
-  unsigned long start = millis();
-  unsigned long deadline = start + kRequestTimeoutMs;
-  while (true) {
-    if (millis() > deadline) {
-      Serial.println("adsb: readResponseBodyWithPoll timeout");
-      break;
-    }
+  const unsigned long deadline = millis() + kRequestTimeoutMs;
+  while (millis() < deadline) {
     pollNetwork();
-    const int available = stream->available();
-    if (available > 0) {
-      const int to_read =
-          available > static_cast<int>(sizeof(buffer)) ? static_cast<int>(sizeof(buffer))
-                                                       : available;
-      const int read_bytes = stream->readBytes(buffer, to_read);
-      if (read_bytes > 0) {
-        deadline = millis() + kRequestTimeoutMs;
-        payload.concat(reinterpret_cast<const char*>(buffer),
-                       static_cast<unsigned>(read_bytes));
+    if (stream->available() > 0) {
+      const DeserializationError err = deserializeJson(doc, *stream);
+      if (err == DeserializationError::Ok) {
+        return true;
       }
-    }
-    if (content_length > 0 &&
-        static_cast<int>(payload.length()) >= content_length) {
-      break;
+      if (err != DeserializationError::IncompleteInput) {
+        Serial.printf("adsb: JSON parse error: %s\n", err.c_str());
+        return false;
+      }
     }
     if (!http.connected() && stream->available() <= 0) {
       break;
     }
-    delay(1);
+    delay(5);
   }
 
-  Serial.printf("adsb: time=%lu, payload.length()=%d\n", millis() - start, payload.length());
-  return payload.length() > 0;
+  Serial.println("adsb: incomplete JSON response");
+  return false;
 }
 
 float kmToNauticalMiles(float km) { return km / kKmPerNm; }
@@ -205,8 +188,6 @@ void fillTagFields(Aircraft* ac, const JsonObject& plane) {
   formatAltitudeTag(plane, ac->alt, sizeof(ac->alt));
 }
 
-}  // namespace
-
 void setPollFn(PollFn fn) { s_poll_fn = fn; }
 
 size_t aircraftCount() { return s_aircraft_count; }
@@ -214,86 +195,87 @@ size_t aircraftCount() { return s_aircraft_count; }
 const Aircraft* aircraftList() { return s_aircraft; }
 
 bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
-  const float dist_nm = kmToNauticalMiles(fetch_radius_km);
-
-  // String url = kApiBase;
-  // url += String(center_lat, 6);
-  // url += "/lon/";
-  // url += String(center_lon, 6);
-  // url += "/dist/";
-  // url += String(dist_nm, 1);
-
-  char url[256];
-  snprintf(url, sizeof(url), kApiBase, center_lat, center_lon, dist_nm);
-
-  Serial.printf("adsb: fetchUpdate url=%s\n", url);
+  float dist_nm = kmToNauticalMiles(fetch_radius_km);
 
   WiFiClientSecure client;
   client.setInsecure();
   client.setHandshakeTimeout(2500);
 
-  HTTPClient http;
-  if (!http.begin(client, url)) {
-    Serial.println("adsb: http.begin failed");
-    return false;
-  }
+  while (true){
+    unsigned long start = millis();
 
-  http.setTimeout(kRequestTimeoutMs * 2);
-  const int code = performGetWithPoll(http);
-  if (code != HTTP_CODE_OK) {
-    Serial.printf("adsb: HTTP %d\n", code);
-    http.end();
-    return false;
-  }
+    char url[256];
+    snprintf(url, sizeof(url), kApiBase, center_lat, center_lon, dist_nm);
 
-  String payload;
-  if (!readResponseBodyWithPoll(http, payload)) {
+    Serial.printf("adsb: fetchUpdate url=%s\n", url);
+
+    HTTPClient http;
+    if (!http.begin(client, url)) {
+      Serial.println("adsb: http.begin failed");
+      http.end();
+      return false;
+    }
+
+    http.setTimeout(kRequestTimeoutMs * 2);
+    const int code = performGetWithPoll(http);
+    if (code != HTTP_CODE_OK) {
+      Serial.printf("adsb: HTTP %d\n", code);
+      http.end();
+      return false;
+    }
+
+    JsonDocument doc;
+    if (readJsonResponse(http, doc)) {
+      http.end();
+      JsonArray ac = doc["ac"].as<JsonArray>();
+      if (ac.isNull()) {
+        s_aircraft_count = 0;
+        return true;
+      }
+
+      size_t n = 0;
+      for (JsonObject plane : ac) {
+        if (n >= kMaxAircraft) {
+          break;
+        }
+        if (!plane["lat"].is<float>() || !plane["lon"].is<float>()) {
+          continue;
+        }
+        if (isOnGround(plane) && !config::kAdsbShowGroundAircraft) {
+          continue;
+        }
+
+        s_aircraft[n].lat = plane["lat"].as<float>();
+        s_aircraft[n].lon = plane["lon"].as<float>();
+        s_aircraft[n].nose_deg = pickNoseHeading(plane);
+        s_aircraft[n].track_deg = pickTrackHeading(plane);
+        s_aircraft[n].gs_knots = pickGroundSpeed(plane);
+        fillTagFields(&s_aircraft[n], plane);
+        ++n;
+      }
+
+      s_aircraft_count = n;
+      Serial.printf("adsb: %u aircraft\n", static_cast<unsigned>(n));
+      return true;
+    }
+
     Serial.println("adsb: empty response");
     http.end();
-    payload = "";
-    return false;
-  }
-  http.end();
-
-  JsonDocument doc;
-  const DeserializationError err = deserializeJson(doc, payload);
-  if (err) {
-    Serial.printf("adsb: JSON parse error: %s\n", err.c_str());
-    payload = "";
-    return false;
-  }
-  payload = "";
-
-  JsonArray ac = doc["ac"].as<JsonArray>();
-  if (ac.isNull()) {
-    s_aircraft_count = 0;
-    return true;
-  }
-
-  size_t n = 0;
-  for (JsonObject plane : ac) {
-    if (n >= kMaxAircraft) {
-      break;
+    if (dist_nm < 5 * 1.150779) {
+      dist_nm -= 1 * 1.150779;
     }
-    if (!plane["lat"].is<float>() || !plane["lon"].is<float>()) {
-      continue;
-    }
-    if (isOnGround(plane) && !config::kAdsbShowGroundAircraft) {
-      continue;
+    else
+      dist_nm -= 5 * 1.150779;
+    if (dist_nm <= 0) {
+      Serial.println("adsb: fetchUpdate failed, no data");
+      return false;
     }
 
-    s_aircraft[n].lat = plane["lat"].as<float>();
-    s_aircraft[n].lon = plane["lon"].as<float>();
-    s_aircraft[n].nose_deg = pickNoseHeading(plane);
-    s_aircraft[n].track_deg = pickTrackHeading(plane);
-    s_aircraft[n].gs_knots = pickGroundSpeed(plane);
-    fillTagFields(&s_aircraft[n], plane);
-    ++n;
+    while (millis() - start < 1100) {
+      pollNetwork();
+      delay(5);
+    }
   }
-
-  s_aircraft_count = n;
-  Serial.printf("adsb: %u aircraft\n", static_cast<unsigned>(n));
-  return true;
 }
 
 }  // namespace services::adsb

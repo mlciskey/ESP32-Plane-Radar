@@ -22,6 +22,8 @@ struct RangePreset {
   float outer_km;
 };
 
+constexpr float kKmPerMi = 1.609f;
+
 constexpr float kRing3ToOuterKm = 4.0f / 3.0f;
 
 constexpr RangePreset kRangePresetsOld[] = {
@@ -32,16 +34,16 @@ constexpr RangePreset kRangePresetsOld[] = {
 };
 
 constexpr RangePreset kRangePresets[] = {
-    {1.61f, 1.61f * kRing3ToOuterKm},
-    {1.61f * 2, 1.61f * kRing3ToOuterKm * 2},
-    {1.61f * 2.5, 1.61f * kRing3ToOuterKm * 2.5},
-    {1.61f * 3, 1.61f * kRing3ToOuterKm * 3},
-    {1.61f * 4, 1.61f * kRing3ToOuterKm * 4},
-    {1.61f * 5, 1.61f * kRing3ToOuterKm * 5},
-    {1.61f * 10, 1.61f * kRing3ToOuterKm * 10},
-    {1.61f * 15, 1.61f * kRing3ToOuterKm * 15},
-    {1.61f * 20, 1.61f * kRing3ToOuterKm * 20},
-    {1.61f * 25, 1.61f * kRing3ToOuterKm * 25},
+    {kKmPerMi, kKmPerMi * kRing3ToOuterKm},
+    {kKmPerMi * 2, kKmPerMi * kRing3ToOuterKm * 2},
+    {kKmPerMi * 2.5, kKmPerMi * kRing3ToOuterKm * 2.5},
+    {kKmPerMi * 3, kKmPerMi * kRing3ToOuterKm * 3},
+    {kKmPerMi * 4, kKmPerMi * kRing3ToOuterKm * 4},
+    {kKmPerMi * 5, kKmPerMi * kRing3ToOuterKm * 5},
+    {kKmPerMi * 10, kKmPerMi * kRing3ToOuterKm * 10},
+    {kKmPerMi * 15, kKmPerMi * kRing3ToOuterKm * 15},
+    {kKmPerMi * 20, kKmPerMi * kRing3ToOuterKm * 20},
+    {kKmPerMi * 25, kKmPerMi * kRing3ToOuterKm * 25},
 };
 
 constexpr size_t kRangePresetCount =
