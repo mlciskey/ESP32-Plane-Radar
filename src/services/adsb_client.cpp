@@ -16,7 +16,7 @@ namespace {
 constexpr char kApiBase[] = "https://opendata.adsb.fi/api/v3/lat/";
 constexpr float kKmPerNm = 1.852f;
 constexpr int kConnectAttemptMs = 200;
-constexpr unsigned long kRequestTimeoutMs = 10000;
+constexpr unsigned long kRequestTimeoutMs = 1000 * 10;
 
 Aircraft s_aircraft[kMaxAircraft];
 size_t s_aircraft_count = 0;
@@ -53,13 +53,19 @@ bool readResponseBodyWithPoll(HTTPClient& http, String& payload) {
   }
 
   const int content_length = http.getSize();
+  Serial.printf("adsb: content_length=%d\n", content_length);
   if (content_length > 0) {
     payload.reserve(static_cast<unsigned>(content_length + 1));
   }
 
   uint8_t buffer[512];
-  const unsigned long deadline = millis() + kRequestTimeoutMs;
-  while (millis() < deadline) {
+  unsigned long start = millis();
+  unsigned long deadline = start + kRequestTimeoutMs;
+  while (true) {
+    if (millis() > deadline) {
+      Serial.println("adsb: readResponseBodyWithPoll timeout");
+      break;
+    }
     pollNetwork();
     const int available = stream->available();
     if (available > 0) {
@@ -68,6 +74,7 @@ bool readResponseBodyWithPoll(HTTPClient& http, String& payload) {
                                                        : available;
       const int read_bytes = stream->readBytes(buffer, to_read);
       if (read_bytes > 0) {
+        deadline = millis() + kRequestTimeoutMs;
         payload.concat(reinterpret_cast<const char*>(buffer),
                        static_cast<unsigned>(read_bytes));
       }
@@ -82,6 +89,7 @@ bool readResponseBodyWithPoll(HTTPClient& http, String& payload) {
     delay(1);
   }
 
+  Serial.printf("adsb: time=%ul, payload.length()=%d\n", millis() - start, payload.length());
   return payload.length() > 0;
 }
 
@@ -215,8 +223,11 @@ bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
   url += "/dist/";
   url += String(dist_nm, 1);
 
+  Serial.printf("adsb: fetchUpdate url=%s\n", url.c_str());
+
   WiFiClientSecure client;
   client.setInsecure();
+  client.setHandshakeTimeout(2500);
 
   HTTPClient http;
   if (!http.begin(client, url)) {
@@ -224,7 +235,7 @@ bool fetchUpdate(double center_lat, double center_lon, float fetch_radius_km) {
     return false;
   }
 
-  http.setTimeout(kRequestTimeoutMs);
+  http.setTimeout(kRequestTimeoutMs * 2);
   const int code = performGetWithPoll(http);
   if (code != HTTP_CODE_OK) {
     Serial.printf("adsb: HTTP %d\n", code);

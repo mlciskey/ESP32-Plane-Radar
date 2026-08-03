@@ -33,6 +33,7 @@ void showRadarIfConnected() {
     delay(2500);
     first = false;
   }
+  g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately after WiFi connects
   ui::radarDisplayDraw();
   g_radar_visible = true;
 }
@@ -64,6 +65,7 @@ void handleBootButton() {
 void fetchAndDrawAircraft() {
   const float fetch_km = ui::radar::fetchRadiusKm();
   try {
+    Serial.printf("fetchAndDrawAircraft\n");
     if (!services::adsb::fetchUpdate(services::location::lat(),
                                     services::location::lon(), fetch_km)) {
       handleBootButton();
@@ -127,6 +129,7 @@ void loop() {
     if (!g_radar_visible) {
       showRadarIfConnected();
     } else if (millis() - g_last_adsb_fetch_ms >= config::kAdsbFetchIntervalMs) {
+      Serial.printf("poll %ul\n", millis() - g_last_adsb_fetch_ms);
       g_last_adsb_fetch_ms = millis();
       fetchAndDrawAircraft();
     }
