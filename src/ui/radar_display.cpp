@@ -505,6 +505,7 @@ void drawAircraft() {
     float dy_km = 0.0f;
     float dist_km = 0.0f;
     offsetKmFromCenter(planes[i].lat, planes[i].lon, &dx_km, &dy_km, &dist_km);
+    //Serial.printf("Aircraft %s: lat=%f lon=%f dist_km=%f\n", planes[i].callsign, planes[i].lat, planes[i].lon, dist_km);
 
     if (isInsideOuterRingKm(dist_km)) {
       int x = 0;

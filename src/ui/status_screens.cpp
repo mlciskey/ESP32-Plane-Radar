@@ -146,7 +146,9 @@ void drawConnectingText() {
   tft.drawString("Connecting to", kCenterX, y + detail_h / 2);
   y += detail_h + kLineGap;
   tft.drawString(s_ssid_line, kCenterX, y + detail_h / 2);
-
+  y += detail_h + kLineGap;
+  tft.drawString("Built " __DATE__ " at " __TIME__, kCenterX, y + detail_h / 2);
+  delay(1500);
   s_connecting_text_drawn = true;
 }
 
@@ -242,14 +244,14 @@ void statusScreenWifiReset() {
                 sizeof(lines) / sizeof(lines[0]));
 }
 
-void statusScreenWifiConnected(const char* ipAddr) {
+void statusScreenWifiConnected(const char* buildStr, const char* ipAddr) {
   char ipLine[100];
-  sprintf(ipLine, "IP: %s", ipAddr);
+  sprintf(ipLine, "http://%s", ipAddr);
 
   const TextLine lines[] = {
       {"Wi-Fi Connected", 1.15f, &kPortalGfxTitle},
-      {"", 1.05f, &kPortalGfxBody},
       {ipLine, 1.0f, &kPortalGfxBody},
+      {buildStr, 1.0f, &kPortalGfxBody},
   };
   drawTextBlock(config::kColorBlack, config::kTextOnBlack, lines,
                 sizeof(lines) / sizeof(lines[0]));
