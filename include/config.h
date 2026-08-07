@@ -61,4 +61,6 @@ constexpr uint16_t kColorYellow = 0xFFE0;
 constexpr uint16_t kTextOnYellow = kColorBlack;
 constexpr uint16_t kTextOnBlack = 0xFFFF;
 
+constexpr const char buildInfo[] = "Built " __DATE__ " at " __TIME__;
+
 }  // namespace config

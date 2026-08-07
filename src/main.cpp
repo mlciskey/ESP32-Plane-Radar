@@ -21,7 +21,6 @@ unsigned long g_last_reconnect_ms = 0;
 unsigned long g_last_adsb_fetch_ms = 0;
 
 bool first = true;
-const char* buildStr = "Built " __DATE__ " at " __TIME__; 
 
 void resetRadarPolling() {
   g_last_adsb_fetch_ms = millis() - config::kAdsbFetchIntervalMs;  // fetch immediately
@@ -33,7 +32,7 @@ void showRadarIfConnected() {
     return;
   }
   if (first) {
-    statusScreenWifiConnected(buildStr, WiFi.localIP().toString().c_str());
+    statusScreenWifiConnected(WiFi.localIP().toString().c_str());
     delay(2500);
     first = false;
   }
@@ -51,7 +50,7 @@ void onRangeTap() {
 
   if (g_radar_visible && WiFi.status() == WL_CONNECTED) {
     if (first) {
-      statusScreenWifiConnected(buildStr, WiFi.localIP().toString().c_str());
+      statusScreenWifiConnected(WiFi.localIP().toString().c_str());
       delay(2500);
       first = false;
     }
@@ -88,7 +87,7 @@ void setup() {
   delay(500);
   Serial.println();
   Serial.println("Plane Radar");
-  Serial.println(buildStr);
+  Serial.println(config::buildInfo);
   bootButtonInit();
   displayInit();
   if (wifiShowsSetupScreenOnBoot()) {
